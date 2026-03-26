@@ -123,6 +123,47 @@ public class SimulationRunner
             cancellationToken);
     }
 
+    // ── Playback ──────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Runs the full simulation and produces a chronologically ordered list of
+    /// <see cref="PlaybackEvent"/> objects – one per passenger step – suitable for
+    /// time-based animated playback in the UI.
+    /// </summary>
+    public (SimulationResult Result, IReadOnlyList<PlaybackEvent> Events) RunForPlayback(
+        CancellationToken cancellationToken = default)
+    {
+        var allEvents = new List<PlaybackEvent>();
+
+        var result = Run(
+            progressCallback: (passenger, _) =>
+            {
+                var steps = passenger.StepTrace;
+                if (steps.Count == 0) return;
+
+                double start    = passenger.ArrivalTime;
+                double duration = passenger.ExitTime - passenger.ServiceStartTime;
+                // Spread steps evenly over the passenger's service duration.
+                double interval = steps.Count > 1 ? duration / (steps.Count - 1) : 0.0;
+
+                for (int i = 0; i < steps.Count; i++)
+                    allEvents.Add(new PlaybackEvent(passenger.Id, steps[i], start + i * interval));
+            },
+            cancellationToken: cancellationToken);
+
+        allEvents.Sort((a, b) => a.SimTime.CompareTo(b.SimTime));
+        return (result, allEvents);
+    }
+
+    /// <summary>
+    /// Async wrapper for <see cref="RunForPlayback"/>.
+    /// </summary>
+    public Task<(SimulationResult Result, IReadOnlyList<PlaybackEvent> Events)> RunForPlaybackAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => RunForPlayback(cancellationToken), cancellationToken);
+    }
+
     // ── Result builder ────────────────────────────────────────────────────────
 
     private SimulationResult BuildResult(List<Passenger> passengers, double duration)
