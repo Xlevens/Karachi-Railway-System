@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/KarachiRailway.Desktop/KarachiRailway.Desktop.csproj" />
+    <Project Path="src/KarachiRailway.Simulation/KarachiRailway.Simulation.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/KarachiRailway.Tests/KarachiRailway.Tests.csproj" />
+  </Folder>
+</Solution>
