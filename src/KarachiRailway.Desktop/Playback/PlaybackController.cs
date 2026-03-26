@@ -1,0 +1,102 @@
+using System.Windows.Threading;
+using KarachiRailway.Simulation.Models;
+
+namespace KarachiRailway.Desktop.Playback;
+
+/// <summary>
+/// Drives time-based animation of simulation events on the WPF UI thread.
+/// On every timer tick the playback clock advances by (SimMinutesPerTick × SpeedMultiplier)
+/// simulated minutes, and all events whose SimTime falls within that window are fired.
+/// </summary>
+public sealed class PlaybackController
+{
+    // At 1× speed: 1 sim-minute fires every 100 ms → 120 sim-min ≈ 12 s real time.
+    private const double SimMinutesPerTick = 1.0;
+    private const int    TickMs            = 100;
+
+    private readonly DispatcherTimer _timer;
+
+    private IReadOnlyList<PlaybackEvent> _events = Array.Empty<PlaybackEvent>();
+    private int    _nextIndex;
+    private double _playbackTime;   // simulated minutes elapsed so far
+    private double _speedMultiplier = 1.0;
+
+    // ── Public events ────────────────────────────────────────────────────────
+
+    /// <summary>Raised on the UI thread for each event that becomes due.</summary>
+    public event Action<PlaybackEvent>? EventApplied;
+
+    /// <summary>Raised on the UI thread when all events have been dispatched.</summary>
+    public event Action? PlaybackCompleted;
+
+    // ── Public state ─────────────────────────────────────────────────────────
+
+    public bool   IsPlaying    => _timer.IsEnabled;
+    public double PlaybackTime => _playbackTime;
+    public int    EventsTotal  => _events.Count;
+    public int    EventsDone   => _nextIndex;
+
+    public double SpeedMultiplier
+    {
+        get => _speedMultiplier;
+        set => _speedMultiplier = Math.Max(0.1, value);
+    }
+
+    // ── Constructor ──────────────────────────────────────────────────────────
+
+    public PlaybackController()
+    {
+        _timer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromMilliseconds(TickMs),
+        };
+        _timer.Tick += OnTick;
+    }
+
+    // ── Control ───────────────────────────────────────────────────────────────
+
+    /// <summary>Load a new event list and reset the playback clock to zero.</summary>
+    public void Load(IReadOnlyList<PlaybackEvent> events)
+    {
+        _timer.Stop();
+        _events       = events;
+        _nextIndex    = 0;
+        _playbackTime = 0;
+    }
+
+    public void Start()
+    {
+        if (_events.Count == 0) return;
+        _timer.Start();
+    }
+
+    public void Pause()  => _timer.Stop();
+    public void Resume() => _timer.Start();
+
+    public void Reset()
+    {
+        _timer.Stop();
+        _nextIndex    = 0;
+        _playbackTime = 0;
+    }
+
+    // ── Timer tick ───────────────────────────────────────────────────────────
+
+    private void OnTick(object? sender, EventArgs e)
+    {
+        _playbackTime += SimMinutesPerTick * _speedMultiplier;
+
+        while (_nextIndex < _events.Count &&
+               _events[_nextIndex].SimTime <= _playbackTime)
+        {
+            EventApplied?.Invoke(_events[_nextIndex]);
+            _nextIndex++;
+        }
+
+        if (_nextIndex >= _events.Count && _events.Count > 0)
+        {
+            _timer.Stop();
+            PlaybackCompleted?.Invoke();
+        }
+    }
+}

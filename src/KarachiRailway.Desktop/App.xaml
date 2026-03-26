@@ -8,6 +8,7 @@
         <!-- Converters -->
         <conv:BoolToVisibilityConverter         x:Key="BoolToVisibility"/>
         <conv:InverseBoolToVisibilityConverter  x:Key="InverseBoolToVisibility"/>
+        <conv:InverseBoolConverter              x:Key="InverseBool"/>
         <conv:DoubleToPercentConverter          x:Key="DoubleToPercent"/>
         <conv:DoubleToFixedStringConverter      x:Key="DoubleToFixed"/>
         <conv:HexColorToBrushConverter          x:Key="HexToBrush"/>
@@ -150,6 +151,18 @@
         <Style x:Key="ButtonReset" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
             <Setter Property="Background" Value="{StaticResource BackgroundPanelBrush}"/>
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+        </Style>
+
+        <!-- Speed ComboBox style -->
+        <Style x:Key="SpeedComboBox" TargetType="ComboBox">
+            <Setter Property="Background"        Value="#0F172A"/>
+            <Setter Property="Foreground"        Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush"       Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness"   Value="1"/>
+            <Setter Property="Padding"           Value="8,6"/>
+            <Setter Property="FontSize"          Value="13"/>
+            <Setter Property="FontFamily"        Value="Segoe UI"/>
+            <Setter Property="MinWidth"          Value="70"/>
         </Style>
 
         <!-- CheckBox Style -->
