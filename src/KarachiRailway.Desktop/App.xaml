@@ -5,7 +5,8 @@
              xmlns:conv="clr-namespace:KarachiRailway.Desktop.Converters"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <!-- Converters -->
+
+        <!-- ══ CONVERTERS ════════════════════════════════════════════════════ -->
         <conv:BoolToVisibilityConverter         x:Key="BoolToVisibility"/>
         <conv:InverseBoolToVisibilityConverter  x:Key="InverseBoolToVisibility"/>
         <conv:InverseBoolConverter              x:Key="InverseBool"/>
@@ -14,115 +15,217 @@
         <conv:HexColorToBrushConverter          x:Key="HexToBrush"/>
         <conv:UtilizationToBrushConverter       x:Key="UtilToBrush"/>
 
-        <!-- Color Palette -->
-        <Color x:Key="BackgroundDeep">#0F172A</Color>
-        <Color x:Key="BackgroundCard">#1E293B</Color>
-        <Color x:Key="BackgroundPanel">#162032</Color>
+        <!-- ══ COLOR PALETTE ════════════════════════════════════════════════ -->
+        <!-- Background layers -->
+        <Color x:Key="BackgroundDeep">#080D1A</Color>
+        <Color x:Key="BackgroundCard">#0D1B33</Color>
+        <Color x:Key="BackgroundPanel">#0A1525</Color>
+        <Color x:Key="BackgroundElevated">#12203A</Color>
+        <!-- Accent palette -->
         <Color x:Key="AccentBlue">#3B82F6</Color>
+        <Color x:Key="AccentBlueBright">#60A5FA</Color>
         <Color x:Key="AccentGreen">#22C55E</Color>
+        <Color x:Key="AccentGreenBright">#4ADE80</Color>
         <Color x:Key="AccentAmber">#F59E0B</Color>
+        <Color x:Key="AccentAmberBright">#FCD34D</Color>
         <Color x:Key="AccentRed">#EF4444</Color>
+        <Color x:Key="AccentRedBright">#F87171</Color>
+        <!-- Text -->
         <Color x:Key="TextPrimary">#F1F5F9</Color>
         <Color x:Key="TextSecondary">#94A3B8</Color>
-        <Color x:Key="Border">#334155</Color>
+        <Color x:Key="TextMuted">#475569</Color>
+        <!-- Border -->
+        <Color x:Key="Border">#1E3A5F</Color>
+        <Color x:Key="BorderHover">#2D5B9E</Color>
 
-        <SolidColorBrush x:Key="BackgroundDeepBrush"  Color="{StaticResource BackgroundDeep}"/>
-        <SolidColorBrush x:Key="BackgroundCardBrush"  Color="{StaticResource BackgroundCard}"/>
-        <SolidColorBrush x:Key="BackgroundPanelBrush" Color="{StaticResource BackgroundPanel}"/>
-        <SolidColorBrush x:Key="AccentBlueBrush"      Color="{StaticResource AccentBlue}"/>
-        <SolidColorBrush x:Key="AccentGreenBrush"     Color="{StaticResource AccentGreen}"/>
-        <SolidColorBrush x:Key="AccentAmberBrush"     Color="{StaticResource AccentAmber}"/>
-        <SolidColorBrush x:Key="AccentRedBrush"       Color="{StaticResource AccentRed}"/>
-        <SolidColorBrush x:Key="TextPrimaryBrush"     Color="{StaticResource TextPrimary}"/>
-        <SolidColorBrush x:Key="TextSecondaryBrush"   Color="{StaticResource TextSecondary}"/>
-        <SolidColorBrush x:Key="BorderBrush"          Color="{StaticResource Border}"/>
+        <!-- ── Brushes ──────────────────────────────────────────────────── -->
+        <SolidColorBrush x:Key="BackgroundDeepBrush"     Color="{StaticResource BackgroundDeep}"/>
+        <SolidColorBrush x:Key="BackgroundCardBrush"     Color="{StaticResource BackgroundCard}"/>
+        <SolidColorBrush x:Key="BackgroundPanelBrush"    Color="{StaticResource BackgroundPanel}"/>
+        <SolidColorBrush x:Key="BackgroundElevatedBrush" Color="{StaticResource BackgroundElevated}"/>
+        <SolidColorBrush x:Key="AccentBlueBrush"         Color="{StaticResource AccentBlue}"/>
+        <SolidColorBrush x:Key="AccentBlueBrightBrush"   Color="{StaticResource AccentBlueBright}"/>
+        <SolidColorBrush x:Key="AccentGreenBrush"        Color="{StaticResource AccentGreen}"/>
+        <SolidColorBrush x:Key="AccentGreenBrightBrush"  Color="{StaticResource AccentGreenBright}"/>
+        <SolidColorBrush x:Key="AccentAmberBrush"        Color="{StaticResource AccentAmber}"/>
+        <SolidColorBrush x:Key="AccentRedBrush"          Color="{StaticResource AccentRed}"/>
+        <SolidColorBrush x:Key="TextPrimaryBrush"        Color="{StaticResource TextPrimary}"/>
+        <SolidColorBrush x:Key="TextSecondaryBrush"      Color="{StaticResource TextSecondary}"/>
+        <SolidColorBrush x:Key="TextMutedBrush"          Color="{StaticResource TextMuted}"/>
+        <SolidColorBrush x:Key="BorderBrush"             Color="{StaticResource Border}"/>
+        <SolidColorBrush x:Key="BorderHoverBrush"        Color="{StaticResource BorderHover}"/>
 
-        <!-- Typography -->
+        <!-- Gradient brushes for subtle depth -->
+        <LinearGradientBrush x:Key="TitleBarGradient" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#0D1B33" Offset="0.0"/>
+            <GradientStop Color="#0A1525" Offset="0.5"/>
+            <GradientStop Color="#0D1B33" Offset="1.0"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="CardGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#0D1B33" Offset="0.0"/>
+            <GradientStop Color="#080D1A" Offset="1.0"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="AccentButtonGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#3B82F6" Offset="0.0"/>
+            <GradientStop Color="#1D4ED8" Offset="1.0"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="GreenButtonGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#22C55E" Offset="0.0"/>
+            <GradientStop Color="#15803D" Offset="1.0"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="AmberButtonGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#F59E0B" Offset="0.0"/>
+            <GradientStop Color="#B45309" Offset="1.0"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="RedButtonGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#EF4444" Offset="0.0"/>
+            <GradientStop Color="#B91C1C" Offset="1.0"/>
+        </LinearGradientBrush>
+
+        <!-- ══ EASING FUNCTIONS ══════════════════════════════════════════════ -->
+        <CubicEase  x:Key="EaseOut"   EasingMode="EaseOut"/>
+        <CubicEase  x:Key="EaseInOut" EasingMode="EaseInOut"/>
+        <BackEase   x:Key="EaseBack"  EasingMode="EaseOut" Amplitude="0.3"/>
+        <SineEase   x:Key="SineInOut" EasingMode="EaseInOut"/>
+
+        <!-- ══ TYPOGRAPHY ════════════════════════════════════════════════════ -->
         <Style x:Key="HeadingLarge" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize"   Value="22"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="FontFamily"  Value="Segoe UI"/>
+            <Setter Property="FontSize"    Value="22"/>
+            <Setter Property="FontWeight"  Value="SemiBold"/>
+            <Setter Property="Foreground"  Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
         </Style>
         <Style x:Key="HeadingMedium" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize"   Value="16"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="FontFamily"  Value="Segoe UI"/>
+            <Setter Property="FontSize"    Value="15"/>
+            <Setter Property="FontWeight"  Value="SemiBold"/>
+            <Setter Property="Foreground"  Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
         </Style>
         <Style x:Key="HeadingSmall" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize"   Value="12"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="FontFamily"  Value="Segoe UI"/>
+            <Setter Property="FontSize"    Value="11"/>
+            <Setter Property="FontWeight"  Value="SemiBold"/>
+            <Setter Property="Foreground"  Value="{StaticResource AccentBlueBrush}"/>
         </Style>
         <Style x:Key="BodyText" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize"   Value="13"/>
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="FontFamily"   Value="Segoe UI"/>
+            <Setter Property="FontSize"     Value="13"/>
+            <Setter Property="Foreground"   Value="{StaticResource TextSecondaryBrush}"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
         <Style x:Key="KpiValue" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize"   Value="28"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="FontFamily"  Value="Segoe UI"/>
+            <Setter Property="FontSize"    Value="28"/>
+            <Setter Property="FontWeight"  Value="Bold"/>
+            <Setter Property="Foreground"  Value="{StaticResource TextPrimaryBrush}"/>
         </Style>
         <Style x:Key="KpiLabel" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize"   Value="11"/>
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="FontFamily"  Value="Segoe UI"/>
+            <Setter Property="FontSize"    Value="11"/>
+            <Setter Property="Foreground"  Value="{StaticResource TextSecondaryBrush}"/>
         </Style>
 
-        <!-- TextBox Style -->
+        <!-- ══ TEXTBOX ═══════════════════════════════════════════════════════ -->
         <Style x:Key="ParamTextBox" TargetType="TextBox">
-            <Setter Property="Background"   Value="#0F172A"/>
-            <Setter Property="Foreground"   Value="{StaticResource TextPrimaryBrush}"/>
-            <Setter Property="BorderBrush"  Value="{StaticResource BorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding"      Value="8,6"/>
-            <Setter Property="FontSize"     Value="13"/>
-            <Setter Property="FontFamily"   Value="Segoe UI"/>
-            <Setter Property="MinWidth"     Value="90"/>
-            <Setter Property="CaretBrush"   Value="{StaticResource TextPrimaryBrush}"/>
-            <Style.Triggers>
-                <Trigger Property="IsFocused" Value="True">
-                    <Setter Property="BorderBrush" Value="{StaticResource AccentBlueBrush}"/>
-                </Trigger>
-            </Style.Triggers>
+            <Setter Property="Background"        Value="#080D1A"/>
+            <Setter Property="Foreground"        Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush"       Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness"   Value="1"/>
+            <Setter Property="Padding"           Value="8,6"/>
+            <Setter Property="FontSize"          Value="13"/>
+            <Setter Property="FontFamily"        Value="Segoe UI"/>
+            <Setter Property="MinWidth"          Value="90"/>
+            <Setter Property="CaretBrush"        Value="{StaticResource AccentBlueBrush}"/>
+            <Setter Property="SelectionBrush"    Value="{StaticResource AccentBlueBrush}"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5"
+                                Padding="{TemplateBinding Padding}">
+                            <ScrollViewer x:Name="PART_ContentHost" Focusable="False"
+                                          HorizontalScrollBarVisibility="Hidden"
+                                          VerticalScrollBarVisibility="Hidden"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <EventTrigger RoutedEvent="GotFocus">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation
+                                            Storyboard.TargetName="Border"
+                                            Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"
+                                            To="{StaticResource AccentBlue}"
+                                            Duration="0:0:0.2">
+                                            <ColorAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </ColorAnimation.EasingFunction>
+                                        </ColorAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                            <EventTrigger RoutedEvent="LostFocus">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation
+                                            Storyboard.TargetName="Border"
+                                            Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"
+                                            To="{StaticResource Border}"
+                                            Duration="0:0:0.2"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
-        <!-- Label Style -->
+        <!-- ══ LABEL ═════════════════════════════════════════════════════════ -->
         <Style x:Key="ParamLabel" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize"   Value="13"/>
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="FontFamily"        Value="Segoe UI"/>
+            <Setter Property="FontSize"          Value="13"/>
+            <Setter Property="Foreground"        Value="{StaticResource TextSecondaryBrush}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
-        <!-- Button Base -->
+        <!-- ══ BUTTON BASE ═══════════════════════════════════════════════════ -->
         <Style x:Key="ButtonBase" TargetType="Button">
-            <Setter Property="FontFamily"   Value="Segoe UI"/>
-            <Setter Property="FontSize"     Value="13"/>
-            <Setter Property="FontWeight"   Value="SemiBold"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding"      Value="20,10"/>
-            <Setter Property="Cursor"       Value="Hand"/>
+            <Setter Property="FontFamily"         Value="Segoe UI"/>
+            <Setter Property="FontSize"           Value="13"/>
+            <Setter Property="FontWeight"         Value="SemiBold"/>
+            <Setter Property="BorderThickness"    Value="0"/>
+            <Setter Property="Padding"            Value="20,10"/>
+            <Setter Property="Cursor"             Value="Hand"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                </Setter.Value>
+            </Setter>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="6"
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="7"
                                 Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Border.Effect>
+                                <DropShadowEffect x:Name="BtnShadow"
+                                                  Color="#000000"
+                                                  ShadowDepth="0"
+                                                  BlurRadius="0"
+                                                  Opacity="0.4"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Opacity" Value="0.85"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Opacity" Value="0.70"/>
-                            </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.35"/>
                             </Trigger>
@@ -130,53 +233,151 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <!-- Hover: scale up + shadow glow -->
+                <EventTrigger RoutedEvent="Mouse.MouseEnter">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation
+                                Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                To="1.06" Duration="0:0:0.15">
+                                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation
+                                Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                To="1.06" Duration="0:0:0.15">
+                                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+                <!-- Leave: scale back -->
+                <EventTrigger RoutedEvent="Mouse.MouseLeave">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation
+                                Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                To="1.0" Duration="0:0:0.18">
+                                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation
+                                Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                To="1.0" Duration="0:0:0.18">
+                                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+                <!-- Click: quick press-down from current scale -->
+                <EventTrigger RoutedEvent="Button.Click">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation
+                                Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                To="0.95" Duration="0:0:0.07">
+                                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseIn"/></DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation
+                                Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                To="0.95" Duration="0:0:0.07">
+                                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseIn"/></DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation
+                                Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                To="1.0" Duration="0:0:0.12" BeginTime="0:0:0.07">
+                                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation
+                                Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                To="1.0" Duration="0:0:0.12" BeginTime="0:0:0.07">
+                                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Style.Triggers>
         </Style>
 
+        <!-- ── Specific button colours ──────────────────────────────────── -->
         <Style x:Key="ButtonStart" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
-            <Setter Property="Background" Value="{StaticResource AccentGreenBrush}"/>
+            <Setter Property="Background" Value="{StaticResource GreenButtonGradient}"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style x:Key="ButtonPause" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
-            <Setter Property="Background" Value="{StaticResource AccentAmberBrush}"/>
+            <Setter Property="Background" Value="{StaticResource AmberButtonGradient}"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style x:Key="ButtonResume" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
-            <Setter Property="Background" Value="{StaticResource AccentBlueBrush}"/>
+            <Setter Property="Background" Value="{StaticResource AccentButtonGradient}"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style x:Key="ButtonStop" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
-            <Setter Property="Background" Value="{StaticResource AccentRedBrush}"/>
+            <Setter Property="Background" Value="{StaticResource RedButtonGradient}"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style x:Key="ButtonReset" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
-            <Setter Property="Background" Value="{StaticResource BackgroundPanelBrush}"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundElevatedBrush}"/>
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
         </Style>
 
-        <!-- Speed ComboBox style -->
+        <!-- ══ COMBOBOX ═══════════════════════════════════════════════════════ -->
         <Style x:Key="SpeedComboBox" TargetType="ComboBox">
-            <Setter Property="Background"        Value="#0F172A"/>
-            <Setter Property="Foreground"        Value="{StaticResource TextPrimaryBrush}"/>
-            <Setter Property="BorderBrush"       Value="{StaticResource BorderBrush}"/>
-            <Setter Property="BorderThickness"   Value="1"/>
-            <Setter Property="Padding"           Value="8,6"/>
-            <Setter Property="FontSize"          Value="13"/>
-            <Setter Property="FontFamily"        Value="Segoe UI"/>
-            <Setter Property="MinWidth"          Value="70"/>
+            <Setter Property="Background"      Value="#080D1A"/>
+            <Setter Property="Foreground"      Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush"     Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"         Value="8,6"/>
+            <Setter Property="FontSize"        Value="13"/>
+            <Setter Property="FontFamily"      Value="Segoe UI"/>
+            <Setter Property="MinWidth"        Value="70"/>
         </Style>
 
-        <!-- CheckBox Style -->
+        <!-- ══ CHECKBOX ═══════════════════════════════════════════════════════ -->
         <Style x:Key="ToggleCheck" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize"   Value="13"/>
+            <Setter Property="Foreground"  Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="FontFamily"  Value="Segoe UI"/>
+            <Setter Property="FontSize"    Value="13"/>
+            <Setter Property="Cursor"      Value="Hand"/>
         </Style>
 
-        <!-- Separator style -->
+        <!-- ══ SEPARATOR ══════════════════════════════════════════════════════ -->
         <Style x:Key="HSep" TargetType="Separator">
             <Setter Property="Background" Value="{StaticResource BorderBrush}"/>
             <Setter Property="Margin"     Value="0,8"/>
         </Style>
+
+        <!-- ══ PROGRESS BAR ═══════════════════════════════════════════════════ -->
+        <Style x:Key="SimProgressBar" TargetType="ProgressBar">
+            <Setter Property="Height"           Value="6"/>
+            <Setter Property="Background"       Value="#1E3A5F"/>
+            <Setter Property="Foreground"       Value="{StaticResource AccentBlueBrush}"/>
+            <Setter Property="BorderThickness"  Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid x:Name="TemplateRoot">
+                            <Border CornerRadius="3"
+                                    Background="{TemplateBinding Background}"/>
+                            <Border x:Name="PART_Track"
+                                    CornerRadius="3"
+                                    Background="{TemplateBinding Background}"/>
+                            <Border x:Name="PART_Indicator"
+                                    CornerRadius="3"
+                                    HorizontalAlignment="Left"
+                                    Background="{TemplateBinding Foreground}">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#3B82F6"
+                                                      ShadowDepth="0"
+                                                      BlurRadius="6"
+                                                      Opacity="0.7"/>
+                                </Border.Effect>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Application.Resources>
 </Application>
 
