@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Windows.Media;
 
 namespace KarachiRailway.Desktop.ViewModels;
@@ -12,6 +13,12 @@ public class FlowNodeViewModel : ViewModelBase
 {
     private bool _isActive;
     private int  _activeCount;
+    private readonly ObservableCollection<string> _activePassengers = new();
+
+    public FlowNodeViewModel()
+    {
+        ActivePassengers = new ReadOnlyObservableCollection<string>(_activePassengers);
+    }
 
     public required string       Id    { get; init; }
     public required string       Title { get; init; }
@@ -21,6 +28,8 @@ public class FlowNodeViewModel : ViewModelBase
     public double Top    { get; init; }
     public double Width  { get; init; } = 180;
     public double Height { get; init; } = 44;
+
+    public ReadOnlyObservableCollection<string> ActivePassengers { get; }
 
     // ── Geometry helpers ──────────────────────────────────────────────────────
 
@@ -68,6 +77,28 @@ public class FlowNodeViewModel : ViewModelBase
 
     public bool   HasActivePassengers => _activeCount > 0;
     public string ActiveCountLabel    => _activeCount > 0 ? _activeCount.ToString() : string.Empty;
+
+    public void EnterPassenger(int passengerId)
+    {
+        string label = $"Customer {passengerId}";
+        if (_activePassengers.Contains(label)) return;
+
+        _activePassengers.Add(label);
+        ActiveCount = _activePassengers.Count;
+    }
+
+    public void LeavePassenger(int passengerId)
+    {
+        string label = $"Customer {passengerId}";
+        if (_activePassengers.Remove(label))
+            ActiveCount = _activePassengers.Count;
+    }
+
+    public void ClearPassengers()
+    {
+        _activePassengers.Clear();
+        ActiveCount = 0;
+    }
 
     // ── Visual colors (hex strings consumed by HexToBrush converter) ──────────
 

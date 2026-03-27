@@ -29,12 +29,13 @@ public sealed class MainViewModel : ViewModelBase
     {
         SpeedOptions = new List<SpeedOption>
         {
-            new("0.5x", 0.5),
-            new("1x",   1.0),
-            new("2x",   2.0),
-            new("4x",   4.0),
+            new("0.25x", 0.25),
+            new("0.5x",  0.5),
+            new("1x",    1.0),
+            new("1.5x",  1.5),
+            new("2x",    2.0),
         };
-        _selectedSpeed = SpeedOptions[1];
+        _selectedSpeed = SpeedOptions[2];
 
         StartCommand  = new AsyncRelayCommand(StartSimulationAsync,
                             () => State is SimulationState.Idle or SimulationState.Completed);
@@ -91,6 +92,23 @@ public sealed class MainViewModel : ViewModelBase
     };
 
     public List<SpeedOption> SpeedOptions { get; }
+
+    public double DiagramCanvasWidth => 1320;
+    public double DiagramCanvasHeight => 980;
+
+    private double _diagramZoom = 0.84;
+    public double DiagramZoom
+    {
+        get => _diagramZoom;
+        set => SetProperty(ref _diagramZoom, Math.Clamp(value, 0.6, 1.25));
+    }
+
+    private double _blockScale = 1.0;
+    public double BlockScale
+    {
+        get => _blockScale;
+        set => SetProperty(ref _blockScale, Math.Clamp(value, 0.7, 1.7));
+    }
 
     private SpeedOption _selectedSpeed;
     public SpeedOption SelectedSpeed
@@ -389,11 +407,11 @@ public sealed class MainViewModel : ViewModelBase
             oldNodeId != newNodeId &&
             _nodeMap.TryGetValue(oldNodeId, out var oldNode))
         {
-            oldNode.ActiveCount = Math.Max(0, oldNode.ActiveCount - 1);
+            oldNode.LeavePassenger(evt.PassengerId);
         }
 
         if (_nodeMap.TryGetValue(newNodeId, out var newNode))
-            newNode.ActiveCount++;
+            newNode.EnterPassenger(evt.PassengerId);
 
         _passengerCurrentNodes[evt.PassengerId] = newNodeId;
 
@@ -430,7 +448,7 @@ public sealed class MainViewModel : ViewModelBase
     private void OnPlaybackCompleted()
     {
         foreach (var n in FlowNodes)
-            n.ActiveCount = 0;
+            n.ClearPassengers();
         _passengerCurrentNodes.Clear();
 
         if (_result != null)
@@ -474,21 +492,28 @@ public sealed class MainViewModel : ViewModelBase
     {
         var nodes = new FlowNodeViewModel[]
         {
-            new() { Id="start",         Title="Start",               Type=FlowNodeType.Start,    Left=380, Top=  10, Width=140, Height=40  },
-            new() { Id="arrival",       Title="Passenger Arrival",   Type=FlowNodeType.Process,  Left=340, Top=  78, Width=220, Height=44  },
-            new() { Id="ticketReq",     Title="Ticket Required?",    Type=FlowNodeType.Decision, Left=325, Top= 155, Width=250, Height=52  },
-            new() { Id="ticketCounter", Title="Ticket Counter",      Type=FlowNodeType.Process,  Left= 60, Top= 265, Width=175, Height=44  },
-            new() { Id="inquiry",       Title="Inquiry Desk",        Type=FlowNodeType.Process,  Left=665, Top= 265, Width=175, Height=44  },
-            new() { Id="buyTicket",     Title="Buy Ticket?",         Type=FlowNodeType.Decision, Left=640, Top= 365, Width=220, Height=52  },
-            new() { Id="payment",       Title="Payment Processing",  Type=FlowNodeType.Process,  Left=645, Top= 470, Width=210, Height=44  },
-            new() { Id="leave",         Title="Passenger Leaves",    Type=FlowNodeType.Failure,  Left=865, Top= 380, Width=175, Height=44  },
-            new() { Id="receipt",       Title="Ticket / Receipt",    Type=FlowNodeType.Process,  Left=645, Top= 567, Width=210, Height=44  },
-            new() { Id="security",      Title="Security Check",      Type=FlowNodeType.Process,  Left=340, Top= 685, Width=220, Height=44  },
-            new() { Id="waiting",       Title="Waiting Area",        Type=FlowNodeType.Process,  Left=340, Top= 768, Width=220, Height=44  },
-            new() { Id="trainArrival",  Title="Train Arrival",       Type=FlowNodeType.Process,  Left=340, Top= 851, Width=220, Height=44  },
-            new() { Id="boarding",      Title="Boarding",            Type=FlowNodeType.Process,  Left=340, Top= 934, Width=220, Height=44  },
-            new() { Id="departs",       Title="Passenger Departs",   Type=FlowNodeType.Process,  Left=340, Top=1017, Width=220, Height=44  },
-            new() { Id="complete",      Title="Journey Complete",    Type=FlowNodeType.Success,  Left=320, Top=1103, Width=260, Height=52  },
+            new() { Id="start",            Title="Start",                     Type=FlowNodeType.Start,    Left=80,   Top=20,  Width=120, Height=42 },
+            new() { Id="arrival",          Title="Passenger Arrival",         Type=FlowNodeType.Process,  Left=22,   Top=100, Width=200, Height=44 },
+            new() { Id="ticketReq",        Title="Ticket Required?",          Type=FlowNodeType.Decision, Left=20,   Top=188, Width=200, Height=62 },
+            new() { Id="ticketCounter",    Title="Ticket Counter",            Type=FlowNodeType.Process,  Left=20,   Top=290, Width=210, Height=44 },
+            new() { Id="security",         Title="Security Check",            Type=FlowNodeType.Process,  Left=20,   Top=390, Width=210, Height=44 },
+            new() { Id="waiting",          Title="Waiting Area",              Type=FlowNodeType.Process,  Left=20,   Top=490, Width=210, Height=44 },
+            new() { Id="trainArrival",     Title="Train Arrival",             Type=FlowNodeType.Process,  Left=20,   Top=590, Width=210, Height=44 },
+            new() { Id="boarding",         Title="Boarding",                  Type=FlowNodeType.Process,  Left=20,   Top=690, Width=210, Height=44 },
+            new() { Id="departs",          Title="Passenger Departs",         Type=FlowNodeType.Process,  Left=20,   Top=790, Width=210, Height=44 },
+            new() { Id="end",              Title="End",                       Type=FlowNodeType.Success,  Left=80,   Top=900, Width=120, Height=42 },
+            new() { Id="inquiry",          Title="Inquiry Desk",              Type=FlowNodeType.Process,  Left=340,  Top=205, Width=220, Height=44 },
+            new() { Id="buyTicket",        Title="Buy Ticket?",               Type=FlowNodeType.Decision, Left=340,  Top=390, Width=220, Height=62 },
+            new() { Id="hasCash",          Title="Has Cash?",                 Type=FlowNodeType.Decision, Left=340,  Top=518, Width=220, Height=62 },
+            new() { Id="sufficientFunds",  Title="Sufficient Funds?",         Type=FlowNodeType.Decision, Left=340,  Top=646, Width=220, Height=62 },
+            new() { Id="ticketReceipt",    Title="Ticket / Receipt",          Type=FlowNodeType.Success,  Left=340,  Top=860, Width=220, Height=50 },
+            new() { Id="hasCard",          Title="Has Card?",                 Type=FlowNodeType.Decision, Left=740,  Top=20,  Width=220, Height=62 },
+            new() { Id="cardValid",        Title="Card Valid?",               Type=FlowNodeType.Decision, Left=740,  Top=212, Width=220, Height=62 },
+            new() { Id="fundsAvailable",   Title="Funds Available?",          Type=FlowNodeType.Decision, Left=740,  Top=340, Width=220, Height=62 },
+            new() { Id="paymentBank",      Title="Payment Verified by Bank",  Type=FlowNodeType.Process,  Left=740,  Top=470, Width=240, Height=50 },
+            new() { Id="accountValid",     Title="Account Valid?",            Type=FlowNodeType.Decision, Left=740,  Top=600, Width=220, Height=62 },
+            new() { Id="txnComplete",      Title="Transaction Complete",      Type=FlowNodeType.Success,  Left=740,  Top=860, Width=240, Height=50 },
+            new() { Id="leave",            Title="Passenger Leaves System",   Type=FlowNodeType.Failure,  Left=1010, Top=130, Width=240, Height=50 },
         };
 
         foreach (var n in nodes) { FlowNodes.Add(n); _nodeMap[n.Id] = n; }
@@ -503,29 +528,41 @@ public sealed class MainViewModel : ViewModelBase
 
         var edges = new[]
         {
-            Edge("start",         "arrival",       null,   (450, 50),  (450, 78)),
-            Edge("arrival",       "ticketReq",     null,   (450, 122), (450, 155)),
-            Edge("ticketReq",     "ticketCounter", "Yes",  (325, 181), (147, 181), (147, 265)),
-            Edge("ticketReq",     "inquiry",       "No",   (575, 181), (752, 181), (752, 265)),
-            Edge("ticketCounter", "security",      null,   (147, 309), (147, 665), (400, 665), (400, 685)),
-            Edge("inquiry",       "buyTicket",     null,   (752, 309), (750, 365)),
-            Edge("buyTicket",     "payment",       "Yes",  (750, 417), (750, 470)),
-            Edge("buyTicket",     "leave",         "No",   (860, 391), (865, 402)),
-            Edge("payment",       "receipt",       null,   (750, 514), (750, 567)),
-            Edge("payment",       "leave",         "Fail", (855, 492), (952, 492), (952, 424)),
-            Edge("receipt",       "security",      null,   (750, 611), (750, 655), (520, 655), (520, 685)),
-            Edge("security",      "waiting",       null,   (450, 729), (450, 768)),
-            Edge("waiting",       "trainArrival",  null,   (450, 812), (450, 851)),
-            Edge("trainArrival",  "boarding",      null,   (450, 895), (450, 934)),
-            Edge("boarding",      "departs",       null,   (450, 978), (450, 1017)),
-            Edge("departs",       "complete",      null,   (450, 1061),(450, 1103)),
+            Edge("start",           "arrival",         null,  (140, 62), (122, 100)),
+            Edge("arrival",         "ticketReq",       null,  (122, 144), (120, 188)),
+            Edge("ticketReq",       "ticketCounter",   "Yes", (120, 250), (125, 290)),
+            Edge("ticketReq",       "inquiry",         "No",  (220, 219), (340, 227)),
+            Edge("ticketCounter",   "security",        null,  (125, 334), (125, 390)),
+            Edge("security",        "waiting",         null,  (125, 434), (125, 490)),
+            Edge("waiting",         "trainArrival",    null,  (125, 534), (125, 590)),
+            Edge("trainArrival",    "boarding",        null,  (125, 634), (125, 690)),
+            Edge("boarding",        "departs",         null,  (125, 734), (125, 790)),
+            Edge("departs",         "end",             null,  (125, 834), (140, 900)),
+            Edge("inquiry",         "buyTicket",       null,  (450, 249), (450, 390)),
+            Edge("buyTicket",       "hasCash",         "Yes", (450, 452), (450, 518)),
+            Edge("buyTicket",       "leave",           "No",  (560, 420), (930, 420), (930, 155), (1010, 155)),
+            Edge("hasCash",         "sufficientFunds", "Yes", (450, 580), (450, 646)),
+            Edge("hasCash",         "hasCard",         "No",  (560, 548), (700, 548), (700, 51), (740, 51)),
+            Edge("sufficientFunds", "ticketReceipt",   "Yes", (450, 708), (450, 860)),
+            Edge("sufficientFunds", "leave",           "No",  (560, 676), (930, 676), (930, 173), (1010, 173)),
+            Edge("hasCard",         "cardValid",       "Yes", (850, 82), (850, 212)),
+            Edge("hasCard",         "leave",           "No",  (960, 51), (1010, 155)),
+            Edge("cardValid",       "fundsAvailable",  "Yes", (850, 274), (850, 340)),
+            Edge("cardValid",       "leave",           "No",  (960, 243), (1010, 173)),
+            Edge("fundsAvailable",  "paymentBank",     "Yes", (850, 402), (860, 470)),
+            Edge("fundsAvailable",  "leave",           "No",  (960, 371), (1010, 191)),
+            Edge("paymentBank",     "accountValid",    null,  (860, 520), (850, 600)),
+            Edge("accountValid",    "txnComplete",     "Yes", (850, 662), (860, 860)),
+            Edge("accountValid",    "leave",           "No",  (960, 631), (1010, 209)),
+            Edge("txnComplete",     "ticketReceipt",   null,  (740, 885), (560, 885)),
+            Edge("ticketReceipt",   "security",        null,  (340, 885), (260, 885), (260, 412), (230, 412)),
         };
         foreach (var e in edges) FlowEdges.Add(e);
     }
 
     private void ResetFlowDiagram()
     {
-        foreach (var n in FlowNodes) n.ActiveCount = 0;
+        foreach (var n in FlowNodes) n.ClearPassengers();
         PassengerTokens.Clear();
         _tokenMap.Clear();
         _passengerCurrentNodes.Clear();
@@ -540,27 +577,27 @@ public sealed class MainViewModel : ViewModelBase
         PassengerStep.InquiryDesk             => "inquiry",
         PassengerStep.BuyTicket_Yes           => "buyTicket",
         PassengerStep.BuyTicket_No            => "leave",
-        PassengerStep.HasCash_Yes             => "payment",
-        PassengerStep.HasCash_No              => "leave",
-        PassengerStep.CashSufficientFunds_Yes => "payment",
-        PassengerStep.CashSufficientFunds_No  => "leave",
-        PassengerStep.HasCard_Yes             => "payment",
-        PassengerStep.HasCard_No              => "payment",
-        PassengerStep.CardValid_Yes           => "payment",
-        PassengerStep.CardValid_No            => "payment",
-        PassengerStep.CardFundsAvailable_Yes  => "payment",
+        PassengerStep.HasCash_Yes             => "hasCash",
+        PassengerStep.HasCash_No              => "hasCash",
+        PassengerStep.CashSufficientFunds_Yes => "sufficientFunds",
+        PassengerStep.CashSufficientFunds_No  => "sufficientFunds",
+        PassengerStep.HasCard_Yes             => "hasCard",
+        PassengerStep.HasCard_No              => "hasCard",
+        PassengerStep.CardValid_Yes           => "cardValid",
+        PassengerStep.CardValid_No            => "cardValid",
+        PassengerStep.CardFundsAvailable_Yes  => "fundsAvailable",
         PassengerStep.CardFundsAvailable_No   => "leave",
-        PassengerStep.AccountValid_Yes        => "payment",
+        PassengerStep.AccountValid_Yes        => "accountValid",
         PassengerStep.AccountValid_No         => "leave",
-        PassengerStep.PaymentVerifiedByBank   => "payment",
-        PassengerStep.TransactionComplete     => "receipt",
-        PassengerStep.TicketReceipt           => "receipt",
+        PassengerStep.PaymentVerifiedByBank   => "paymentBank",
+        PassengerStep.TransactionComplete     => "txnComplete",
+        PassengerStep.TicketReceipt           => "ticketReceipt",
         PassengerStep.SecurityCheck           => "security",
         PassengerStep.WaitingArea             => "waiting",
         PassengerStep.TrainArrival            => "trainArrival",
         PassengerStep.Boarding                => "boarding",
         PassengerStep.PassengerDeparts        => "departs",
-        PassengerStep.Completed               => "complete",
+        PassengerStep.Completed               => "end",
         PassengerStep.PassengerLeftSystem     => "leave",
         _                                     => "arrival",
     };

@@ -5,14 +5,12 @@ namespace KarachiRailway.Desktop.Playback;
 
 /// <summary>
 /// Drives time-based animation of simulation events on the WPF UI thread.
-/// On every timer tick the playback clock advances by (SimMinutesPerTick × SpeedMultiplier)
-/// simulated minutes, and all events whose SimTime falls within that window are fired.
+/// On every timer tick the playback clock advances by elapsed real time scaled by SpeedMultiplier
+/// (at 1x, 1 simulated minute advances per 1 real second), and all due events are fired.
 /// </summary>
 public sealed class PlaybackController
 {
-    // At 1× speed: 1 sim-minute fires every 100 ms → 120 sim-min ≈ 12 s real time.
-    private const double SimMinutesPerTick = 1.0;
-    private const int    TickMs            = 100;
+    private const int TickMs = 100;
 
     private readonly DispatcherTimer _timer;
 
@@ -20,6 +18,7 @@ public sealed class PlaybackController
     private int    _nextIndex;
     private double _playbackTime;   // simulated minutes elapsed so far
     private double _speedMultiplier = 1.0;
+    private DateTime _lastTickUtc;
 
     // ── Public events ────────────────────────────────────────────────────────
 
@@ -39,7 +38,7 @@ public sealed class PlaybackController
     public double SpeedMultiplier
     {
         get => _speedMultiplier;
-        set => _speedMultiplier = Math.Max(0.1, value);
+        set => _speedMultiplier = Math.Max(0.05, value);
     }
 
     // ── Constructor ──────────────────────────────────────────────────────────
@@ -67,11 +66,17 @@ public sealed class PlaybackController
     public void Start()
     {
         if (_events.Count == 0) return;
+        _lastTickUtc = DateTime.UtcNow;
         _timer.Start();
     }
 
-    public void Pause()  => _timer.Stop();
-    public void Resume() => _timer.Start();
+    public void Pause() => _timer.Stop();
+
+    public void Resume()
+    {
+        _lastTickUtc = DateTime.UtcNow;
+        _timer.Start();
+    }
 
     public void Reset()
     {
@@ -84,7 +89,13 @@ public sealed class PlaybackController
 
     private void OnTick(object? sender, EventArgs e)
     {
-        _playbackTime += SimMinutesPerTick * _speedMultiplier;
+        var now = DateTime.UtcNow;
+        double elapsedSeconds = (now - _lastTickUtc).TotalSeconds;
+        _lastTickUtc = now;
+
+        if (elapsedSeconds <= 0) return;
+
+        _playbackTime += elapsedSeconds * _speedMultiplier;
 
         while (_nextIndex < _events.Count &&
                _events[_nextIndex].SimTime <= _playbackTime)
