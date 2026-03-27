@@ -6,5 +6,5 @@
   <Folder Name="/tests/">
     <Project Path="tests/KarachiRailway.Tests/KarachiRailway.Tests.csproj" />
 
-  </Folder
+  </Folder>
 </Solution>
