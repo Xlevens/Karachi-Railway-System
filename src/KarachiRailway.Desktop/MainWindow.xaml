@@ -93,8 +93,13 @@
                     </StackPanel>
                 </StackPanel>
 
-                <!-- Status badge with pulse animation -->
-                <Border Grid.Column="2" CornerRadius="20" Padding="16,7"
+                <!-- Panel toggle buttons + status badge -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="{Binding LeftPanelToggleLabel}" Command="{Binding ToggleLeftPanelCommand}"
+                        Style="{StaticResource ButtonReset}" Margin="0,0,8,0" Padding="10,6" MinWidth="108"/>
+                    <Button Content="{Binding RightPanelToggleLabel}" Command="{Binding ToggleRightPanelCommand}"
+                        Style="{StaticResource ButtonReset}" Margin="0,0,10,0" Padding="10,6" MinWidth="108"/>
+                    <Border CornerRadius="20" Padding="16,7"
                         VerticalAlignment="Center" BorderThickness="1"
                         Background="{Binding StatusColor, Converter={StaticResource HexToBrush}, ConverterParameter=15}"
                         BorderBrush="{Binding StatusColor, Converter={StaticResource HexToBrush}, ConverterParameter=40}">
@@ -151,24 +156,26 @@
                         <TextBlock Text="{Binding StatusLabel}"
                                    FontFamily="Segoe UI" FontSize="13" FontWeight="SemiBold"
                                    Foreground="{Binding StatusColor, Converter={StaticResource HexToBrush}}"/>
-                    </StackPanel>
-                </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
             </Grid>
         </Border>
 
         <!-- ══ MAIN CONTENT ═══════════════════════════════════════════════════ -->
         <Grid Grid.Row="1" Margin="12,10,12,10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="330"/>
+                <ColumnDefinition Width="{Binding LeftPanelWidth}"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="330"/>
+                <ColumnDefinition Width="{Binding RightPanelWidth}"/>
             </Grid.ColumnDefinitions>
 
             <!-- ── LEFT: SETTINGS PANEL ─────────────────────────────────────── -->
             <Border Grid.Column="0"
                     Background="{StaticResource CardGradient}"
                     CornerRadius="14" Margin="0,0,10,0" Padding="16"
-                    BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                    BorderThickness="1" BorderBrush="{StaticResource BorderBrush}"
+                    Visibility="{Binding ShowLeftPanel, Converter={StaticResource BoolToVisibility}}">
                 <Border.Effect>
                     <DropShadowEffect Color="#000000" ShadowDepth="2" BlurRadius="16" Opacity="0.35"/>
                 </Border.Effect>
@@ -295,6 +302,8 @@
                                     Command="{Binding PauseCommand}" Margin="0,0,6,6"/>
                             <Button Content="&#x25B6;  Resume"  Style="{StaticResource ButtonResume}"
                                     Command="{Binding ResumeCommand}" Margin="0,0,6,6"/>
+                            <Button Content="&#x23ED;  Next Step"  Style="{StaticResource ButtonReset}"
+                                Command="{Binding StepCommand}" Margin="0,0,6,6"/>
                             <Button Content="&#x23F9;  Stop"    Style="{StaticResource ButtonStop}"
                                     Command="{Binding StopCommand}" Margin="0,0,6,6"/>
                             <Button Content="&#x21BA;  Reset"   Style="{StaticResource ButtonReset}"
@@ -333,7 +342,7 @@
             <!-- ── CENTER: FLOW DIAGRAM ──────────────────────────────────────── -->
             <Border Grid.Column="1"
                     Background="{StaticResource CardGradient}"
-                    CornerRadius="14" Margin="0,0,10,0"
+                    CornerRadius="14" Margin="0"
                     BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
                 <Border.Effect>
                     <DropShadowEffect Color="#000000" ShadowDepth="2" BlurRadius="16" Opacity="0.35"/>
@@ -361,6 +370,13 @@
                                              Style="{StaticResource SimProgressBar}"
                                              Width="280"
                                              HorizontalAlignment="Left"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="Flow Size" Style="{StaticResource KpiLabel}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <Slider Width="140" Minimum="0.6" Maximum="1.25"
+                                            Value="{Binding DiagramZoom, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <TextBlock Text="{Binding DiagramZoom, StringFormat=F2}"
+                                               Style="{StaticResource KpiLabel}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal"
                                         VerticalAlignment="Center" Margin="0,0,4,0">
@@ -411,16 +427,17 @@
                             <ScrollViewer HorizontalScrollBarVisibility="Auto"
                                           VerticalScrollBarVisibility="Auto"
                                           Background="Transparent">
-                                <Canvas Width="1320" Height="980" ClipToBounds="False">
+                                <Canvas Width="{Binding DiagramCanvasWidth}" Height="{Binding DiagramCanvasHeight}" ClipToBounds="False">
                                     <Canvas.LayoutTransform>
-                                        <ScaleTransform ScaleX="{Binding DiagramZoom}" ScaleY="{Binding DiagramZoom}"/>
+                                        <ScaleTransform ScaleX="{Binding EffectiveDiagramZoom}" ScaleY="{Binding EffectiveDiagramZoom}"/>
                                     </Canvas.LayoutTransform>
 
                                     <!-- ── EDGES ───────────────────────────────────── -->
                                     <ItemsControl ItemsSource="{Binding FlowEdges}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
-                                                <Canvas Width="1320" Height="980"/>
+                                                <Canvas Width="{Binding DataContext.DiagramCanvasWidth, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        Height="{Binding DataContext.DiagramCanvasHeight, RelativeSource={RelativeSource AncestorType=Window}}"/>
                                             </ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
@@ -451,7 +468,8 @@
                                     <ItemsControl ItemsSource="{Binding FlowNodes}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
-                                                <Canvas Width="1320" Height="980"/>
+                                                <Canvas Width="{Binding DataContext.DiagramCanvasWidth, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        Height="{Binding DataContext.DiagramCanvasHeight, RelativeSource={RelativeSource AncestorType=Window}}"/>
                                             </ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemContainerStyle>
@@ -609,7 +627,8 @@
                                     <ItemsControl ItemsSource="{Binding PassengerTokens}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
-                                                <Canvas Width="1320" Height="980"/>
+                                                <Canvas Width="{Binding DataContext.DiagramCanvasWidth, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        Height="{Binding DataContext.DiagramCanvasHeight, RelativeSource={RelativeSource AncestorType=Window}}"/>
                                             </ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemContainerStyle>
@@ -681,23 +700,22 @@
                                     <TextBlock Text="Block Size" Style="{StaticResource KpiLabel}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                     <Slider Width="150" Minimum="0.7" Maximum="1.7"
                                             Value="{Binding BlockScale, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBlock Text="{Binding BlockScale, StringFormat=F2}"
+                                    <TextBlock Text="{Binding EffectiveBlockScale, StringFormat=F2}"
                                                Style="{StaticResource KpiLabel}" Margin="8,0,0,0" VerticalAlignment="Center"/>
                                 </StackPanel>
 
                                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl ItemsSource="{Binding FlowNodes}">
+                                    <ItemsControl ItemsSource="{Binding BlockFlowNodes}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
                                                 <WrapPanel Orientation="Horizontal"/>
                                             </ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
-                                        <ItemsControl.RenderTransform>
-                                            <ScaleTransform ScaleX="{Binding BlockScale}" ScaleY="{Binding BlockScale}"/>
-                                        </ItemsControl.RenderTransform>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Border Width="240" MinHeight="128" Margin="0,0,12,12" Padding="10"
+                                                <Border Width="{Binding DataContext.EffectiveBlockScale, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource Multiply}, ConverterParameter=240}"
+                                                        MinHeight="{Binding DataContext.EffectiveBlockScale, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource Multiply}, ConverterParameter=128}"
+                                                        Margin="0,0,12,12" Padding="10"
                                                         Background="{Binding CurrentBackground, Converter={StaticResource HexToBrush}}"
                                                         BorderBrush="{Binding CurrentBorderColor, Converter={StaticResource HexToBrush}}"
                                                         BorderThickness="1.3" CornerRadius="8">
@@ -735,8 +753,9 @@
             <!-- ── RIGHT: KPI PANEL ─────────────────────────────────────────── -->
             <Border Grid.Column="2"
                     Background="{StaticResource CardGradient}"
-                    CornerRadius="14" Padding="16"
-                    BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                    CornerRadius="14" Padding="16" Margin="10,0,0,0"
+                    BorderThickness="1" BorderBrush="{StaticResource BorderBrush}"
+                    Visibility="{Binding ShowRightPanel, Converter={StaticResource BoolToVisibility}}">
                 <Border.Effect>
                     <DropShadowEffect Color="#000000" ShadowDepth="2" BlurRadius="16" Opacity="0.35"/>
                 </Border.Effect>

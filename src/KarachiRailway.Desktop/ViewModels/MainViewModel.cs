@@ -41,8 +41,13 @@ public sealed class MainViewModel : ViewModelBase
                             () => State is SimulationState.Idle or SimulationState.Completed);
         PauseCommand  = new RelayCommand(PausePlayback,  () => State == SimulationState.Running);
         ResumeCommand = new RelayCommand(ResumePlayback, () => State == SimulationState.Paused);
+          StepCommand   = new RelayCommand(StepForwardPlayback,
+                        () => State is SimulationState.Running or SimulationState.Paused &&
+                            _playback.EventsDone < _playback.EventsTotal);
         StopCommand   = new RelayCommand(StopSimulation, () => State is SimulationState.Running or SimulationState.Paused);
         ResetCommand  = new RelayCommand(Reset,          () => State != SimulationState.Running);
+        ToggleLeftPanelCommand  = new RelayCommand(() => ShowLeftPanel = !ShowLeftPanel);
+        ToggleRightPanelCommand = new RelayCommand(() => ShowRightPanel = !ShowRightPanel);
 
         _playback.EventApplied      += OnEventApplied;
         _playback.PlaybackCompleted += OnPlaybackCompleted;
@@ -100,15 +105,74 @@ public sealed class MainViewModel : ViewModelBase
     public double DiagramZoom
     {
         get => _diagramZoom;
-        set => SetProperty(ref _diagramZoom, Math.Clamp(value, 0.6, 1.25));
+        set
+        {
+            if (SetProperty(ref _diagramZoom, Math.Clamp(value, 0.6, 1.25)))
+                OnPropertyChanged(nameof(EffectiveDiagramZoom));
+        }
     }
 
     private double _blockScale = 1.0;
     public double BlockScale
     {
         get => _blockScale;
-        set => SetProperty(ref _blockScale, Math.Clamp(value, 0.7, 1.7));
+        set
+        {
+            if (SetProperty(ref _blockScale, Math.Clamp(value, 0.7, 1.7)))
+                OnPropertyChanged(nameof(EffectiveBlockScale));
+        }
     }
+
+    private bool _showLeftPanel = true;
+    public bool ShowLeftPanel
+    {
+        get => _showLeftPanel;
+        set
+        {
+            if (SetProperty(ref _showLeftPanel, value))
+            {
+                OnPropertyChanged(nameof(LeftPanelWidth));
+                OnPropertyChanged(nameof(LeftPanelToggleLabel));
+                OnPropertyChanged(nameof(AutoZoomFactor));
+                OnPropertyChanged(nameof(EffectiveDiagramZoom));
+                OnPropertyChanged(nameof(EffectiveBlockScale));
+            }
+        }
+    }
+
+    private bool _showRightPanel = true;
+    public bool ShowRightPanel
+    {
+        get => _showRightPanel;
+        set
+        {
+            if (SetProperty(ref _showRightPanel, value))
+            {
+                OnPropertyChanged(nameof(RightPanelWidth));
+                OnPropertyChanged(nameof(RightPanelToggleLabel));
+                OnPropertyChanged(nameof(AutoZoomFactor));
+                OnPropertyChanged(nameof(EffectiveDiagramZoom));
+                OnPropertyChanged(nameof(EffectiveBlockScale));
+            }
+        }
+    }
+
+    public GridLength LeftPanelWidth => ShowLeftPanel ? new GridLength(330) : new GridLength(0);
+    public GridLength RightPanelWidth => ShowRightPanel ? new GridLength(330) : new GridLength(0);
+
+    public string LeftPanelToggleLabel => ShowLeftPanel ? "Hide Settings" : "Show Settings";
+    public string RightPanelToggleLabel => ShowRightPanel ? "Hide Metrics" : "Show Metrics";
+
+    public double AutoZoomFactor =>
+        (ShowLeftPanel, ShowRightPanel) switch
+        {
+            (false, false) => 0.78,
+            (false, true) or (true, false) => 0.9,
+            _ => 1.0,
+        };
+
+    public double EffectiveDiagramZoom => DiagramZoom * AutoZoomFactor;
+    public double EffectiveBlockScale => BlockScale * AutoZoomFactor;
 
     private SpeedOption _selectedSpeed;
     public SpeedOption SelectedSpeed
@@ -292,14 +356,18 @@ public sealed class MainViewModel : ViewModelBase
     public bool HasValidationError => !string.IsNullOrEmpty(_validationError);
 
     public ObservableCollection<FlowNodeViewModel>       FlowNodes       { get; } = new();
+    public ObservableCollection<FlowNodeViewModel>       BlockFlowNodes  { get; } = new();
     public ObservableCollection<FlowEdgeViewModel>       FlowEdges       { get; } = new();
     public ObservableCollection<PassengerTokenViewModel> PassengerTokens { get; } = new();
 
     public ICommand StartCommand  { get; }
     public ICommand PauseCommand  { get; }
     public ICommand ResumeCommand { get; }
+    public ICommand StepCommand   { get; }
     public ICommand StopCommand   { get; }
     public ICommand ResetCommand  { get; }
+    public ICommand ToggleLeftPanelCommand { get; }
+    public ICommand ToggleRightPanelCommand { get; }
 
     private async Task StartSimulationAsync()
     {
@@ -367,12 +435,28 @@ public sealed class MainViewModel : ViewModelBase
         PlainSummary = "Playback running...";
     }
 
+    private void StepForwardPlayback()
+    {
+        if (State == SimulationState.Running)
+            _playback.Pause();
+
+        if (_playback.StepForward())
+        {
+            if (State != SimulationState.Completed)
+                State = SimulationState.Paused;
+
+            PlainSummary = "Advanced one step.";
+            CommandManager.InvalidateRequerySuggested();
+        }
+    }
+
     private void StopSimulation()
     {
         _cts?.Cancel();
         _playback.Pause();
         State = SimulationState.Idle;
         PlainSummary = "Stopped.";
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private void Reset()
@@ -397,6 +481,7 @@ public sealed class MainViewModel : ViewModelBase
         ValidationError = string.Empty;
         PlainSummary    = "Parameters reset. Configure and click Simulate to run again.";
         ResetFlowDiagram();
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private void OnEventApplied(PlaybackEvent evt)
@@ -443,6 +528,7 @@ public sealed class MainViewModel : ViewModelBase
 
         SimCurrentTime   = evt.SimTime;
         PlaybackProgress = _playback.EventsDone;
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private void OnPlaybackCompleted()
@@ -455,6 +541,7 @@ public sealed class MainViewModel : ViewModelBase
             PlainSummary = BuildPlainSummary(_result);
 
         State = SimulationState.Completed;
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private void EnsureToken(int passengerId)
@@ -513,7 +600,7 @@ public sealed class MainViewModel : ViewModelBase
             new() { Id="paymentBank",      Title="Payment Verified by Bank",  Type=FlowNodeType.Process,  Left=740,  Top=470, Width=240, Height=50 },
             new() { Id="accountValid",     Title="Account Valid?",            Type=FlowNodeType.Decision, Left=740,  Top=600, Width=220, Height=62 },
             new() { Id="txnComplete",      Title="Transaction Complete",      Type=FlowNodeType.Success,  Left=740,  Top=860, Width=240, Height=50 },
-            new() { Id="leave",            Title="Passenger Leaves System",   Type=FlowNodeType.Failure,  Left=1010, Top=130, Width=240, Height=50 },
+            new() { Id="leave",            Title="Passenger Leaves System",   Type=FlowNodeType.Failure,  Left=1010, Top=900, Width=240, Height=50 },
         };
 
         foreach (var n in nodes) { FlowNodes.Add(n); _nodeMap[n.Id] = n; }
@@ -540,24 +627,40 @@ public sealed class MainViewModel : ViewModelBase
             Edge("departs",         "end",             null,  (125, 834), (140, 900)),
             Edge("inquiry",         "buyTicket",       null,  (450, 249), (450, 390)),
             Edge("buyTicket",       "hasCash",         "Yes", (450, 452), (450, 518)),
-            Edge("buyTicket",       "leave",           "No",  (560, 420), (930, 420), (930, 155), (1010, 155)),
+            Edge("buyTicket",       "leave",           "No",  (560, 420), (930, 420), (930, 925), (1010, 925)),
             Edge("hasCash",         "sufficientFunds", "Yes", (450, 580), (450, 646)),
             Edge("hasCash",         "hasCard",         "No",  (560, 548), (700, 548), (700, 51), (740, 51)),
             Edge("sufficientFunds", "ticketReceipt",   "Yes", (450, 708), (450, 860)),
-            Edge("sufficientFunds", "leave",           "No",  (560, 676), (930, 676), (930, 173), (1010, 173)),
+            Edge("sufficientFunds", "leave",           "No",  (560, 676), (930, 676), (930, 933), (1010, 933)),
             Edge("hasCard",         "cardValid",       "Yes", (850, 82), (850, 212)),
-            Edge("hasCard",         "leave",           "No",  (960, 51), (1010, 155)),
+            Edge("hasCard",         "leave",           "No",  (960, 51), (960, 925), (1010, 925)),
             Edge("cardValid",       "fundsAvailable",  "Yes", (850, 274), (850, 340)),
-            Edge("cardValid",       "leave",           "No",  (960, 243), (1010, 173)),
+            Edge("cardValid",       "leave",           "No",  (960, 243), (960, 933), (1010, 933)),
             Edge("fundsAvailable",  "paymentBank",     "Yes", (850, 402), (860, 470)),
-            Edge("fundsAvailable",  "leave",           "No",  (960, 371), (1010, 191)),
+            Edge("fundsAvailable",  "leave",           "No",  (960, 371), (960, 941), (1010, 941)),
             Edge("paymentBank",     "accountValid",    null,  (860, 520), (850, 600)),
             Edge("accountValid",    "txnComplete",     "Yes", (850, 662), (860, 860)),
-            Edge("accountValid",    "leave",           "No",  (960, 631), (1010, 209)),
+            Edge("accountValid",    "leave",           "No",  (960, 631), (960, 949), (1010, 949)),
             Edge("txnComplete",     "ticketReceipt",   null,  (740, 885), (560, 885)),
             Edge("ticketReceipt",   "security",        null,  (340, 885), (260, 885), (260, 412), (230, 412)),
         };
         foreach (var e in edges) FlowEdges.Add(e);
+
+        RebuildBlockFlowNodes();
+    }
+
+    private void RebuildBlockFlowNodes()
+    {
+        BlockFlowNodes.Clear();
+
+        foreach (var node in FlowNodes.Where(n => n.Id is not "leave" and not "end"))
+            BlockFlowNodes.Add(node);
+
+        if (_nodeMap.TryGetValue("leave", out var leaveNode))
+            BlockFlowNodes.Add(leaveNode);
+
+        if (_nodeMap.TryGetValue("end", out var endNode))
+            BlockFlowNodes.Add(endNode);
     }
 
     private void ResetFlowDiagram()

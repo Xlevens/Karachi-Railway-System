@@ -123,3 +123,22 @@ public sealed class InverseBoolConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => value is false;
 }
+
+/// <summary>Multiplies a bound double by a numeric converter parameter.</summary>
+[ValueConversion(typeof(double), typeof(double))]
+public sealed class MultiplyConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is not double input) return 0d;
+
+        double factor = 1.0;
+        if (parameter is string p && double.TryParse(p, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed))
+            factor = parsed;
+
+        return input * factor;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
