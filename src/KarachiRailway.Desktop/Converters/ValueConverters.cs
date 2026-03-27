@@ -53,10 +53,16 @@ public sealed class DoubleToFixedStringConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
-/// <summary>Converts a hex color string to a SolidColorBrush.</summary>
+/// <summary>
+/// Converts a hex color string to a SolidColorBrush.
+/// Optional ConverterParameter (0-100) sets the alpha as a percentage, e.g. "20" → 20% opacity.
+/// </summary>
 [ValueConversion(typeof(string), typeof(SolidColorBrush))]
 public sealed class HexColorToBrushConverter : IValueConverter
 {
+    /// <summary>Multiplier converting an alpha percentage (0-100) to a byte value (0-255).</summary>
+    private const double AlphaPercentageMultiplier = 2.55;
+
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is string hex)
@@ -64,6 +70,14 @@ public sealed class HexColorToBrushConverter : IValueConverter
             try
             {
                 var color = (Color)ColorConverter.ConvertFromString(hex);
+                if (parameter is string alphaStr &&
+                    int.TryParse(alphaStr, System.Globalization.NumberStyles.Integer,
+                                 CultureInfo.InvariantCulture, out int alphaPct))
+                {
+                    byte alpha = (byte)Math.Clamp(
+                        (int)Math.Round(alphaPct * AlphaPercentageMultiplier), 0, 255);
+                    color = Color.FromArgb(alpha, color.R, color.G, color.B);
+                }
                 return new SolidColorBrush(color);
             }
             catch { /* fall through */ }

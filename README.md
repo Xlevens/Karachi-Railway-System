@@ -9,11 +9,23 @@ A professional desktop simulation application for the Karachi Railway System, bu
 > *(Run the application on Windows to see the full UI)*
 
 The application features:
-- Dark-themed professional dashboard
-- Real-time KPI cards (ρ, Wq, W, Lq, L)
+- **Modern deep-dark themed** dashboard (darker background layers, gradient brushes, drop-shadows)
+- **Dynamic animations**: window entrance fade-in, button hover/click scale micro-interactions, active node glow pulse, status-dot heartbeat, token/badge scale-in
+- Real-time flow diagram with animated passenger tokens
+- Real-time KPI cards (ρ, Wq, W, Lq, L) with hover highlight
 - Live passenger log with step traces
 - Configurable parameters panel
 - Plain-language results summary
+
+---
+
+## Startup Notes
+
+- **Global error handler**: The app registers a `DispatcherUnhandledException` handler on startup.
+  Any unhandled WPF dispatcher exception shows a friendly dialog instead of silently crashing.
+- **Windows only**: This is a WPF application (`net8.0-windows`). It must be run on Windows.
+- **HexToBrush alpha support**: The `HexColorToBrushConverter` now accepts an optional
+  `ConverterParameter` (0–100) to set alpha as a percentage (e.g. `ConverterParameter=15` → 15% opacity).
 
 ---
 
