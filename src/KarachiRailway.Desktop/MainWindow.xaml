@@ -17,6 +17,11 @@
         <vm:MainViewModel/>
     </Window.DataContext>
 
+    <Window.InputBindings>
+        <KeyBinding Key="N" Modifiers="Control" Command="{Binding StepCommand}"/>
+        <KeyBinding Key="Right" Modifiers="Control" Command="{Binding StepCommand}"/>
+    </Window.InputBindings>
+
     <!-- ══ WINDOW ENTRANCE FADE-IN ══════════════════════════════════════════ -->
     <Window.Triggers>
         <EventTrigger RoutedEvent="Window.Loaded">
