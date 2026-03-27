@@ -85,6 +85,28 @@ public sealed class PlaybackController
         _playbackTime = 0;
     }
 
+    /// <summary>
+    /// Advances playback by exactly one event (if available) while remaining paused.
+    /// Returns true when an event was applied, false when there are no remaining events.
+    /// </summary>
+    public bool StepForward()
+    {
+        _timer.Stop();
+
+        if (_nextIndex >= _events.Count)
+            return false;
+
+        var evt = _events[_nextIndex];
+        _playbackTime = Math.Max(_playbackTime, evt.SimTime);
+        EventApplied?.Invoke(evt);
+        _nextIndex++;
+
+        if (_nextIndex >= _events.Count && _events.Count > 0)
+            PlaybackCompleted?.Invoke();
+
+        return true;
+    }
+
     // ── Timer tick ───────────────────────────────────────────────────────────
 
     private void OnTick(object? sender, EventArgs e)
