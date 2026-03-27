@@ -356,8 +356,8 @@
                             <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                 <TextBlock Text="FLOW DIAGRAM"
                                            Style="{StaticResource HeadingSmall}" Margin="0,0,0,6"/>
-                                <ProgressBar Value="{Binding PlaybackProgress}"
-                                             Maximum="{Binding PlaybackTotal}"
+                                <ProgressBar Value="{Binding PlaybackProgress, Mode=OneWay}"
+                                             Maximum="{Binding PlaybackTotal, Mode=OneWay}"
                                              Style="{StaticResource SimProgressBar}"
                                              Width="280"
                                              HorizontalAlignment="Left"/>
