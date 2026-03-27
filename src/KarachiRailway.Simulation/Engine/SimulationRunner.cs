@@ -3,9 +3,9 @@ using KarachiRailway.Simulation.Models;
 namespace KarachiRailway.Simulation.Engine;
 
 /// <summary>
-/// Discrete-event simulator for the Karachi Railway M/M/1 single-server queue.
-/// Generates exponentially-distributed inter-arrival and service times,
-/// then routes each passenger through the decision-flow engine.
+/// Discrete-event simulator for Karachi Railway single-server queue models (M/M/1, M/G/1, G/G/1).
+/// Distribution choices are controlled by <see cref="SimulationParameters.ModelType"/>,
+/// then each passenger is routed through the decision-flow engine.
 /// </summary>
 public class SimulationRunner
 {
@@ -76,8 +76,8 @@ public class SimulationRunner
             if (_cancelled || cancellationToken.IsCancellationRequested)
                 break;
 
-            // Next arrival (exponential inter-arrival)
-            double interArrival = SampleExponential(_params.ArrivalRate);
+            // Next arrival (model-dependent inter-arrival)
+            double interArrival = SampleInterArrival();
             simTime += interArrival;
 
             if (simTime > durationMinutes)
@@ -94,8 +94,8 @@ public class SimulationRunner
             double startService = Math.Max(simTime, serviceEndAt);
             passenger.ServiceStartTime = startService;
 
-            // Service duration (exponential)
-            double serviceDuration = SampleExponential(_params.ServiceRate);
+            // Service duration (model-dependent service-time)
+            double serviceDuration = SampleServiceTime();
             serviceEndAt = startService + serviceDuration;
             passenger.ExitTime = serviceEndAt;
 
@@ -168,9 +168,12 @@ public class SimulationRunner
 
     private SimulationResult BuildResult(List<Passenger> passengers, double duration)
     {
-        // Analytical M/M/1 KPIs
-        var (rho, lq, l, wq, w) = MM1Calculator.Compute(
-            _params.ArrivalRate, _params.ServiceRate);
+        var (rho, lq, l, wq, w) = QueueMetricsCalculator.Compute(
+            _params.ModelType,
+            _params.ArrivalRate,
+            _params.ServiceRate,
+            _params.ServiceCv,
+            _params.ArrivalCv);
 
         int completed = passengers.Count(p => p.Completed);
         int left      = passengers.Count(p => p.LeftSystem);
@@ -184,6 +187,7 @@ public class SimulationRunner
 
         return new SimulationResult
         {
+            ModelType               = _params.ModelType,
             Utilization             = rho,
             AvgQueueWaitTime        = wq,
             AvgSystemTime           = w,
@@ -207,5 +211,80 @@ public class SimulationRunner
         double u;
         do { u = _rng.NextDouble(); } while (u == 0.0);
         return -Math.Log(u) / rate;
+    }
+
+    private double SampleInterArrival()
+    {
+        return _params.ModelType switch
+        {
+            QueueModelType.MM1 => SampleExponential(_params.ArrivalRate),
+            QueueModelType.MG1 => SampleExponential(_params.ArrivalRate),
+            QueueModelType.GG1 => SampleGammaByMeanAndCv(1.0 / _params.ArrivalRate, _params.ArrivalCv),
+            _ => SampleExponential(_params.ArrivalRate),
+        };
+    }
+
+    private double SampleServiceTime()
+    {
+        return _params.ModelType switch
+        {
+            QueueModelType.MM1 => SampleExponential(_params.ServiceRate),
+            QueueModelType.MG1 => SampleGammaByMeanAndCv(1.0 / _params.ServiceRate, _params.ServiceCv),
+            QueueModelType.GG1 => SampleGammaByMeanAndCv(1.0 / _params.ServiceRate, _params.ServiceCv),
+            _ => SampleExponential(_params.ServiceRate),
+        };
+    }
+
+    private double SampleGammaByMeanAndCv(double mean, double cv)
+    {
+        if (mean <= 0) throw new ArgumentOutOfRangeException(nameof(mean));
+        if (cv <= 0) throw new ArgumentOutOfRangeException(nameof(cv));
+
+        if (Math.Abs(cv - 1.0) < 1e-9)
+            return SampleExponential(1.0 / mean);
+
+        double shape = 1.0 / (cv * cv);
+        double scale = mean / shape;
+        return SampleGamma(shape) * scale;
+    }
+
+    // Marsaglia and Tsang method.
+    private double SampleGamma(double shape)
+    {
+        if (shape <= 0)
+            throw new ArgumentOutOfRangeException(nameof(shape));
+
+        if (shape < 1.0)
+        {
+            double u = _rng.NextDouble();
+            return SampleGamma(shape + 1.0) * Math.Pow(u, 1.0 / shape);
+        }
+
+        double d = shape - 1.0 / 3.0;
+        double c = 1.0 / Math.Sqrt(9.0 * d);
+
+        while (true)
+        {
+            double x = SampleStandardNormal();
+            double v = 1.0 + c * x;
+            if (v <= 0) continue;
+
+            v = v * v * v;
+            double u = _rng.NextDouble();
+
+            if (u < 1.0 - 0.0331 * x * x * x * x)
+                return d * v;
+
+            if (Math.Log(u) < 0.5 * x * x + d * (1.0 - v + Math.Log(v)))
+                return d * v;
+        }
+    }
+
+    private double SampleStandardNormal()
+    {
+        double u1;
+        do { u1 = _rng.NextDouble(); } while (u1 == 0.0);
+        double u2 = _rng.NextDouble();
+        return Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Cos(2.0 * Math.PI * u2);
     }
 }

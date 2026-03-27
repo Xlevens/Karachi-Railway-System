@@ -27,6 +27,8 @@ public sealed class MainViewModel : ViewModelBase
 
     public MainViewModel()
     {
+        QueueModels = Enum.GetValues<QueueModelType>().ToList();
+
         SpeedOptions = new List<SpeedOption>
         {
             new("0.25x", 0.25),
@@ -48,6 +50,7 @@ public sealed class MainViewModel : ViewModelBase
         ResetCommand  = new RelayCommand(Reset,          () => State != SimulationState.Running);
         ToggleLeftPanelCommand  = new RelayCommand(() => ShowLeftPanel = !ShowLeftPanel);
         ToggleRightPanelCommand = new RelayCommand(() => ShowRightPanel = !ShowRightPanel);
+        SelectModelCommand      = new RelayCommand(SelectModel);
 
         _playback.EventApplied      += OnEventApplied;
         _playback.PlaybackCompleted += OnPlaybackCompleted;
@@ -97,6 +100,43 @@ public sealed class MainViewModel : ViewModelBase
     };
 
     public List<SpeedOption> SpeedOptions { get; }
+    public List<QueueModelType> QueueModels { get; }
+
+    private QueueModelType _selectedQueueModel = QueueModelType.MM1;
+    public QueueModelType SelectedQueueModel
+    {
+        get => _selectedQueueModel;
+        set
+        {
+            if (SetProperty(ref _selectedQueueModel, value))
+            {
+                OnPropertyChanged(nameof(IsMM1));
+                OnPropertyChanged(nameof(IsMG1));
+                OnPropertyChanged(nameof(IsGG1));
+                OnPropertyChanged(nameof(QueueModelHeaderText));
+            }
+        }
+    }
+
+    public string QueueModelHeaderText =>
+        $"{SelectedQueueModel switch
+        {
+            QueueModelType.MM1 => "M/M/1",
+            QueueModelType.MG1 => "M/G/1",
+            QueueModelType.GG1 => "G/G/1",
+            _                  => "M/M/1",
+        }} Queue Simulation  ·  Flow Diagram Mode";
+
+    private bool _showModelSelection = true;
+    public bool ShowModelSelection
+    {
+        get => _showModelSelection;
+        set => SetProperty(ref _showModelSelection, value);
+    }
+
+    public bool IsMM1 => SelectedQueueModel == QueueModelType.MM1;
+    public bool IsMG1 => SelectedQueueModel == QueueModelType.MG1;
+    public bool IsGG1 => SelectedQueueModel == QueueModelType.GG1;
 
     public double DiagramCanvasWidth => 1320;
     public double DiagramCanvasHeight => 980;
@@ -157,8 +197,8 @@ public sealed class MainViewModel : ViewModelBase
         }
     }
 
-    public GridLength LeftPanelWidth => ShowLeftPanel ? new GridLength(330) : new GridLength(0);
-    public GridLength RightPanelWidth => ShowRightPanel ? new GridLength(330) : new GridLength(0);
+    public GridLength LeftPanelWidth => ShowLeftPanel ? new GridLength(370) : new GridLength(0);
+    public GridLength RightPanelWidth => ShowRightPanel ? new GridLength(370) : new GridLength(0);
 
     public string LeftPanelToggleLabel => ShowLeftPanel ? "Hide Settings" : "Show Settings";
     public string RightPanelToggleLabel => ShowRightPanel ? "Hide Metrics" : "Show Metrics";
@@ -166,8 +206,8 @@ public sealed class MainViewModel : ViewModelBase
     public double AutoZoomFactor =>
         (ShowLeftPanel, ShowRightPanel) switch
         {
-            (false, false) => 0.78,
-            (false, true) or (true, false) => 0.9,
+            (true, true) => 0.84,
+            (false, true) or (true, false) => 0.93,
             _ => 1.0,
         };
 
@@ -227,6 +267,20 @@ public sealed class MainViewModel : ViewModelBase
                 OnPropertyChanged(nameof(StabilityHint));
             }
         }
+    }
+
+    private double _serviceCv = 1.0;
+    public double ServiceCv
+    {
+        get => _serviceCv;
+        set => SetProperty(ref _serviceCv, value);
+    }
+
+    private double _arrivalCv = 1.0;
+    public double ArrivalCv
+    {
+        get => _arrivalCv;
+        set => SetProperty(ref _arrivalCv, value);
     }
 
     private int _durationMinutes = 120;
@@ -368,6 +422,7 @@ public sealed class MainViewModel : ViewModelBase
     public ICommand ResetCommand  { get; }
     public ICommand ToggleLeftPanelCommand { get; }
     public ICommand ToggleRightPanelCommand { get; }
+    public ICommand SelectModelCommand { get; }
 
     private async Task StartSimulationAsync()
     {
@@ -457,6 +512,16 @@ public sealed class MainViewModel : ViewModelBase
         State = SimulationState.Idle;
         PlainSummary = "Stopped.";
         CommandManager.InvalidateRequerySuggested();
+    }
+
+    private void SelectModel(object? parameter)
+    {
+        if (parameter is string text && Enum.TryParse<QueueModelType>(text, out var selected))
+            SelectedQueueModel = selected;
+        else if (parameter is QueueModelType typed)
+            SelectedQueueModel = typed;
+
+        ShowModelSelection = false;
     }
 
     private void Reset()
@@ -707,8 +772,11 @@ public sealed class MainViewModel : ViewModelBase
 
     private SimulationParameters BuildParameters() => new()
     {
+        ModelType                = SelectedQueueModel,
         ArrivalRate               = ArrivalRate,
         ServiceRate               = ServiceRate,
+        ServiceCv                 = ServiceCv,
+        ArrivalCv                 = ArrivalCv,
         SimulationDurationMinutes = DurationMinutes,
         TicketRequiredProbability = TicketRequiredProb,
         BuyTicketProbability      = BuyTicketProb,
@@ -724,6 +792,12 @@ public sealed class MainViewModel : ViewModelBase
         if (ArrivalRate <= 0)  { ValidationError = "Arrival rate must be > 0."; return false; }
         if (ServiceRate <= 0)  { ValidationError = "Service rate must be > 0."; return false; }
         if (DurationMinutes < 1) { ValidationError = "Duration must be >= 1 min."; return false; }
+        if (ServiceCv <= 0) { ValidationError = "Service CV must be > 0."; return false; }
+        if (SelectedQueueModel == QueueModelType.GG1 && ArrivalCv <= 0)
+        {
+            ValidationError = "Arrival CV must be > 0 for G/G/1.";
+            return false;
+        }
         double[] probs = { TicketRequiredProb, BuyTicketProb, CardUsageProb,
                            CardValidProb, AccountValidProb, SufficientFundsProb };
         if (probs.Any(p => p < 0 || p > 1))

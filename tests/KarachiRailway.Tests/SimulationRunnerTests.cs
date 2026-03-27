@@ -56,6 +56,37 @@ public class SimulationRunnerTests
     }
 
     [Fact]
+    public void Run_MG1Model_ProducesResultWithMatchingModelType()
+    {
+        var p = MakeParams();
+        p.ModelType = QueueModelType.MG1;
+        p.ServiceCv = 1.6;
+
+        var runner = new SimulationRunner(p, new Random(42));
+        var result = runner.Run();
+
+        Assert.Equal(QueueModelType.MG1, result.ModelType);
+        Assert.True(result.TotalArrived > 0);
+        Assert.False(double.IsNaN(result.AvgQueueWaitTime));
+    }
+
+    [Fact]
+    public void Run_GG1Model_ProducesResultWithMatchingModelType()
+    {
+        var p = MakeParams();
+        p.ModelType = QueueModelType.GG1;
+        p.ArrivalCv = 1.3;
+        p.ServiceCv = 0.8;
+
+        var runner = new SimulationRunner(p, new Random(42));
+        var result = runner.Run();
+
+        Assert.Equal(QueueModelType.GG1, result.ModelType);
+        Assert.True(result.TotalArrived > 0);
+        Assert.False(double.IsNaN(result.AvgSystemTime));
+    }
+
+    [Fact]
     public async Task Cancel_StopsSimulationEarly()
     {
         var p = new SimulationParameters

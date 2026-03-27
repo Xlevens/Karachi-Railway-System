@@ -5,6 +5,9 @@ namespace KarachiRailway.Simulation.Models;
 /// </summary>
 public class SimulationResult
 {
+    /// <summary>The queueing model used for this run.</summary>
+    public QueueModelType ModelType { get; set; } = QueueModelType.MM1;
+
     // ── M/M/1 Analytical KPIs ────────────────────────────────────────────────
 
     /// <summary>Server utilisation ρ = λ / μ.</summary>

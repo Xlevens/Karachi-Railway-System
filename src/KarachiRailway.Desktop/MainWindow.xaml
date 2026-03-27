@@ -99,7 +99,7 @@
                         <TextBlock Text="Karachi Railway System"
                                    Style="{StaticResource HeadingMedium}"
                                    FontSize="16"/>
-                        <TextBlock Text="M/M/1 Queue Simulation  ·  Flow Diagram Mode"
+                        <TextBlock Text="{Binding QueueModelHeaderText}"
                                    Style="{StaticResource KpiLabel}"
                                    Margin="0,2,0,0" Opacity="0.75"/>
                     </StackPanel>
@@ -193,11 +193,52 @@
                 </Border.Effect>
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel>
+                    <StackPanel Margin="0,0,8,0">
                         <TextBlock Text="SIMULATION SETTINGS"
                                    Style="{StaticResource HeadingSmall}" Margin="0,0,0,16"/>
 
-                        <TextBlock Text="Queue Model" Style="{StaticResource HeadingMedium}" Margin="0,0,0,12"/>
+                        <TextBlock Text="Queue Model" Style="{StaticResource HeadingMedium}" Margin="0,0,0,10"/>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="120"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Model Type"
+                                       Style="{StaticResource ParamLabel}" VerticalAlignment="Center"/>
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding QueueModels}"
+                                      SelectedItem="{Binding SelectedQueueModel, Mode=TwoWay}"
+                                      Style="{StaticResource SpeedComboBox}"/>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,10"
+                              Visibility="{Binding IsMM1, Converter={StaticResource InverseBoolToVisibility}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="92"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Service CV (Cs)"
+                                       Style="{StaticResource ParamLabel}"/>
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding ServiceCv, StringFormat=F2, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource ParamTextBox}"
+                                     IsEnabled="{Binding CanEditParams}"/>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,12"
+                              Visibility="{Binding IsGG1, Converter={StaticResource BoolToVisibility}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="92"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Arrival CV (Ca)"
+                                       Style="{StaticResource ParamLabel}"/>
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding ArrivalCv, StringFormat=F2, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource ParamTextBox}"
+                                     IsEnabled="{Binding CanEditParams}"/>
+                        </Grid>
 
                         <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
@@ -382,13 +423,6 @@
                                              Style="{StaticResource SimProgressBar}"
                                              Width="280"
                                              HorizontalAlignment="Left"/>
-                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0" VerticalAlignment="Center">
-                                    <TextBlock Text="Flow Size" Style="{StaticResource KpiLabel}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <Slider Width="140" Minimum="0.6" Maximum="1.25"
-                                            Value="{Binding DiagramZoom, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBlock Text="{Binding DiagramZoom, StringFormat=F2}"
-                                               Style="{StaticResource KpiLabel}" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                                </StackPanel>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal"
                                         VerticalAlignment="Center" Margin="0,0,4,0">
@@ -436,10 +470,25 @@
 
                     <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0" Margin="10,8,10,10">
                         <TabItem Header="Flow Diagram">
-                            <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                          VerticalScrollBarVisibility="Auto"
-                                          Background="Transparent">
-                                <Canvas Width="{Binding DiagramCanvasWidth}" Height="{Binding DiagramCanvasHeight}" ClipToBounds="False">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10" VerticalAlignment="Center">
+                                    <TextBlock Text="Flow Size" Style="{StaticResource KpiLabel}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <Slider Width="140" Minimum="0.6" Maximum="1.25"
+                                            Value="{Binding DiagramZoom, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <TextBlock Text="{Binding DiagramZoom, StringFormat=F2}"
+                                               Style="{StaticResource KpiLabel}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <ScrollViewer Grid.Row="1"
+                                              HorizontalScrollBarVisibility="Auto"
+                                              VerticalScrollBarVisibility="Auto"
+                                              Background="Transparent">
+                                    <Canvas Width="{Binding DiagramCanvasWidth}" Height="{Binding DiagramCanvasHeight}" ClipToBounds="False">
                                     <Canvas.LayoutTransform>
                                         <ScaleTransform ScaleX="{Binding EffectiveDiagramZoom}" ScaleY="{Binding EffectiveDiagramZoom}"/>
                                     </Canvas.LayoutTransform>
@@ -697,8 +746,9 @@
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
 
-                                </Canvas>
-                            </ScrollViewer>
+                                    </Canvas>
+                                </ScrollViewer>
+                            </Grid>
                         </TabItem>
 
                         <TabItem Header="Block Flow">
@@ -772,7 +822,7 @@
                     <DropShadowEffect Color="#000000" ShadowDepth="2" BlurRadius="16" Opacity="0.35"/>
                 </Border.Effect>
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
+                    <StackPanel Margin="0,0,8,0">
                         <TextBlock Text="LIVE METRICS"
                                    Style="{StaticResource HeadingSmall}" Margin="0,0,0,14"/>
 
@@ -1081,6 +1131,51 @@
                            HorizontalAlignment="Center"
                            Margin="0,8,0,0"/>
             </Grid>
+        </Grid>
+
+        <!-- ══ MODEL SELECTION SCREEN ═══════════════════════════════════════ -->
+        <Grid Grid.RowSpan="3" Panel.ZIndex="998"
+              Background="#E6080D1A"
+              Visibility="{Binding ShowModelSelection, Converter={StaticResource BoolToVisibility}}">
+            <Border Width="700" Padding="30,28" CornerRadius="16"
+                    BorderThickness="1" BorderBrush="{StaticResource BorderBrush}"
+                    Background="{StaticResource CardGradient}"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Text="Select Queue Model"
+                               Style="{StaticResource HeadingLarge}"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Choose one model to continue"
+                               Style="{StaticResource BodyText}" Opacity="0.85"
+                       HorizontalAlignment="Center" Margin="0,8,0,22"/>
+
+                <UniformGrid Columns="3" Rows="1" Margin="0,0,0,14">
+                        <Button Content="M/M/1"
+                                Style="{StaticResource ButtonStart}"
+                                Command="{Binding SelectModelCommand}"
+                                CommandParameter="MM1"
+                    Margin="0,0,10,0"
+                    MinHeight="44" Padding="14,10"/>
+                        <Button Content="M/G/1"
+                                Style="{StaticResource ButtonResume}"
+                                Command="{Binding SelectModelCommand}"
+                                CommandParameter="MG1"
+                    Margin="0,0,10,0"
+                    MinHeight="44" Padding="14,10"/>
+                        <Button Content="G/G/1"
+                                Style="{StaticResource ButtonPause}"
+                                Command="{Binding SelectModelCommand}"
+                    CommandParameter="GG1"
+                    MinHeight="44" Padding="14,10"/>
+                    </UniformGrid>
+
+                <TextBlock Margin="0,2,0,0"
+                               Style="{StaticResource KpiLabel}"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       Text="M/M/1: exponential arrivals + exponential service · M/G/1: exponential arrivals + general service · G/G/1: general arrivals + general service"/>
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </Window>

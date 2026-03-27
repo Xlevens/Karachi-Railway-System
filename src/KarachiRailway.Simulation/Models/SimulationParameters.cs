@@ -8,6 +8,9 @@ namespace KarachiRailway.Simulation.Models;
 /// </summary>
 public class SimulationParameters
 {
+    /// <summary>Queueing model used by the simulator.</summary>
+    public QueueModelType ModelType { get; set; } = QueueModelType.MM1;
+
     // ── M/M/1 Rates ─────────────────────────────────────────────────────────
 
     /// <summary>Passenger arrival rate λ (passengers per minute).</summary>
@@ -17,6 +20,21 @@ public class SimulationParameters
     /// <summary>Service rate μ (passengers per minute).</summary>
     [Range(0.01, double.MaxValue, ErrorMessage = "Service rate (μ) must be greater than 0.")]
     public double ServiceRate { get; set; } = 10.0;
+
+    /// <summary>
+    /// Service-time coefficient of variation (C_s).
+    /// For M/M/1 this is ignored (fixed to exponential, C_s = 1).
+    /// For M/G/1 and G/G/1 this controls service variability.
+    /// </summary>
+    [Range(0.01, 10.0, ErrorMessage = "Service CV must be > 0.")]
+    public double ServiceCv { get; set; } = 1.0;
+
+    /// <summary>
+    /// Inter-arrival-time coefficient of variation (C_a).
+    /// Used only for G/G/1.
+    /// </summary>
+    [Range(0.01, 10.0, ErrorMessage = "Arrival CV must be > 0.")]
+    public double ArrivalCv { get; set; } = 1.0;
 
     // ── Simulation Duration ──────────────────────────────────────────────────
 
@@ -67,8 +85,11 @@ public class SimulationParameters
     /// <summary>Returns a deep copy with the same parameter values.</summary>
     public SimulationParameters Clone() => new()
     {
+        ModelType = ModelType,
         ArrivalRate = ArrivalRate,
         ServiceRate = ServiceRate,
+        ServiceCv = ServiceCv,
+        ArrivalCv = ArrivalCv,
         SimulationDurationMinutes = SimulationDurationMinutes,
         TicketRequiredProbability = TicketRequiredProbability,
         BuyTicketProbability = BuyTicketProbability,
